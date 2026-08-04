@@ -14,8 +14,16 @@ app.get("/", (req, res) => {
 });
 
 app.post("/chat", async (req, res) => {
+  console.log("Chat request received:", req.body);
+
   try {
     const message = req.body.message;
+
+    if (!message) {
+      return res.status(400).json({
+        error: "No message provided"
+      });
+    }
 
     const model = ai.getGenerativeModel({
       model: "gemini-2.0-flash"
@@ -25,8 +33,9 @@ app.post("/chat", async (req, res) => {
 You are Jane.
 
 You are a guest staying at the player's cabin.
-You are a little scared of the player at first, but you are friendly.
-You talk naturally and stay in character.
+The player scares you a little at first, but you are friendly.
+You are nervous, curious, and talk naturally.
+Stay in character. Do not mention that you are an AI.
 
 Player says:
 ${message}
@@ -36,14 +45,19 @@ Reply as Jane:
 
     const result = await model.generateContent(prompt);
 
+    const reply = result.response.text();
+
+    console.log("Jane replied:", reply);
+
     res.json({
-      reply: result.response.text()
+      reply: reply
     });
 
   } catch (error) {
-    console.log(error);
+    console.error("Gemini error:", error);
+
     res.status(500).json({
-      error: "Jane could not answer."
+      error: "Jane could not respond"
     });
   }
 });
